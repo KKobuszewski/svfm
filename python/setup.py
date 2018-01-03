@@ -25,8 +25,10 @@ setup(
 
 import os
 import shutil
+import glob
 
-srcfile = 'build/lib.linux-x86_64-2.7/cfunctions.so'
+
+srcfile = glob.glob('build/lib.linux-x86_64-2.*/cfunctions.so')[0]
 dstfile = './cfunctions.so'
 
 assert not os.path.isabs(srcfile)
