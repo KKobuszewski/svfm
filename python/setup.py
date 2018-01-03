@@ -12,7 +12,7 @@ ext_modules = [
               sources            = ['cfunctions.pyx'],
               include_dirs       = [numpy.get_include(),'.'],
               language           = "c++",                                                                                         # generate C++ code
-              extra_compile_args = ['-fopenmp','-pthread','-fPIC','-mtune=native','-march=native','-O3','-falign-functions=64']#,'-fext-numeric-literals'], #'-std=c99',
+              extra_compile_args = ['-fopenmp','-pthread','-fPIC','-mtune=native','-march=native','-O3','-falign-functions=64'],#'-fext-numeric-literals'], #'-std=c99'],
               extra_link_args    = ['-fopenmp','-pthread'],
               libraries          = ['fftw3','gomp'],
               library_dirs       = ['/usr/local/lib']),
