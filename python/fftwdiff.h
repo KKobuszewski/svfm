@@ -12,8 +12,9 @@
 //extern "C" {
 //#endif
 
-//#include <complex.h>
-#include <ccomplex>
+//#include <complex.h>#include <complex.h>
+#include <cstdio>
+#include <complex.h>
 #include <fftw3.h>
 
 
