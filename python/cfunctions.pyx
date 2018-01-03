@@ -397,6 +397,7 @@ cpdef multiple_impurities(double t,
     #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz = 2*np.pi* scipy.fftpack.fftfreq(N, d=(z[1]-z[0]))
     #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dxdt = np.empty(2*N)
     
+    
     # get positions of vortex filaments
     x[:] = np.ascontiguousarray( np.real( np.fft.ifft(xk[:N]) ) )
     y[:] = np.ascontiguousarray( np.real( np.fft.ifft(xk[N:]) ) )

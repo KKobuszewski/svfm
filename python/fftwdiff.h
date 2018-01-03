@@ -8,11 +8,12 @@
 
 #include <omp.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
-#include <complex.h>
+//#include <complex.h>
+#include <ccomplex>
 #include <fftw3.h>
 
 
@@ -242,9 +243,9 @@ void destroy_plan(void)
 }
 
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+//#ifdef __cplusplus
+//} // extern "C"
+//#endif
 
 
 
