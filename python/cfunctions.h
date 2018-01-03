@@ -9,11 +9,25 @@
 
 #include <omp.h>
 
-#include <fftwdiff.h>
 
 
+#ifndef Complex
 #include <complex>
+#define Complex std::complex<double>
+#define creal(x) x.real()
+#define cimag(x) x.imag()
+    #ifndef I
+    #define I Complex(0.,1.)
+    #endif
+#endif
+#include <fftwdiff.hpp>
+
+
+
+//#include <complex.h>
+//#define Complex double __complex__
 #include <cmath>
+
 
 //#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -177,7 +191,7 @@ inline void get_forces(double* xV, double* yV, double* zV, double* dx, double* d
 
 // //using namespace std::literals::complex_literals;
 
-inline void get_forces(double* xV, double* yV, double* zV, double* dx, double* dy, double* rN, std::complex<double> *fx, std::complex<double>* fy, double* fVN_params)
+inline void get_forces(double* xV, double* yV, double* zV, double* dx, double* dy, double* rN, Complex *fx, Complex* fy, double* fVN_params)
 {
     for (int ix=0; ix<N; ix++)
     {
@@ -197,8 +211,8 @@ inline void get_forces(double* xV, double* yV, double* zV, double* dx, double* d
         f        = f/(1 + fVN_params[3]*_rVN + fVN_params[4]*_rVN*_rVN + fVN_params[5]*_rVN*_rVN*_rVN + 
                           fVN_params[6]*_rVN*_rVN*_rVN*_rVN + fVN_params[7]*_rVN*_rVN*_rVN*_rVN*_rVN);
         
-        fx[ix] = std::complex<double>( sina[ix] * f * xVN[ix]/_rVN, 0.);
-        fy[ix] = std::complex<double>( sina[ix] * f * yVN[ix]/_rVN, 0.);
+        fx[ix] = Complex( sina[ix] * f * xVN[ix]/_rVN, 0.);
+        fy[ix] = Complex( sina[ix] * f * yVN[ix]/_rVN, 0.);
     }
     
 }
@@ -235,7 +249,7 @@ inline void get_forces_multiple_impurities(double* xV, double* yV, double* zV, d
 // //using namespace std::literals::complex_literals;
 
 inline void get_forces_multiple_impurities(double* xV, double* yV, double* zV, double* dx, double* dy, double* rN, 
-                                           std::complex<double> *fx, std::complex<double>* fy, double* fVN_params, const int M)
+                                           Complex *fx, Complex* fy, double* fVN_params, const int M)
 {
     for (int ix=0; ix<N; ix++)
     {
@@ -255,8 +269,8 @@ inline void get_forces_multiple_impurities(double* xV, double* yV, double* zV, d
         f        = f/(1 + fVN_params[3]*_rVN + fVN_params[4]*_rVN*_rVN + fVN_params[5]*_rVN*_rVN*_rVN + 
                           fVN_params[6]*_rVN*_rVN*_rVN*_rVN + fVN_params[7]*_rVN*_rVN*_rVN*_rVN*_rVN);
         
-        fx[ix] = std::complex<double>( sina[ix] * f * xVN[ix]/_rVN, 0. );
-        fy[ix] = std::complex<double>( sina[ix] * f * yVN[ix]/_rVN, 0. );
+        fx[ix] = Complex( sina[ix] * f * xVN[ix]/_rVN, 0. );
+        fy[ix] = Complex( sina[ix] * f * yVN[ix]/_rVN, 0. );
     }
     
     for (int in=1; in < M/3; in++)
@@ -280,8 +294,8 @@ inline void get_forces_multiple_impurities(double* xV, double* yV, double* zV, d
             f        = f/(1 + fVN_params[3]*_rVN + fVN_params[4]*_rVN*_rVN + fVN_params[5]*_rVN*_rVN*_rVN + 
                             fVN_params[6]*_rVN*_rVN*_rVN*_rVN + fVN_params[7]*_rVN*_rVN*_rVN*_rVN*_rVN);
             
-            fx[ix] += std::complex<double>( sina[ix] * f * xVN[ix]/_rVN, 0. );
-            fy[ix] += std::complex<double>( sina[ix] * f * yVN[ix]/_rVN, 0. );
+            fx[ix] += Complex( sina[ix] * f * xVN[ix]/_rVN, 0. );
+            fy[ix] += Complex( sina[ix] * f * yVN[ix]/_rVN, 0. );
         }
     }
 }
