@@ -29,8 +29,7 @@ def finalize():
     _finalize()
 
 
-
-def create_lattice(a, nx_beg,nx_end,ny_beg,ny_end,nz_beg,nz_end, theta=0., phi=0.):
+def create_lattice(a, nx_beg,nx_end,ny_beg,ny_end,nz_beg,nz_end, theta=0., phi=0.,primitive_cell='bcc'):
     """
     @param a                  - lattice constant
     @param nx_beg             - number of lattice consants before (0,0,0) point in x direction
@@ -54,21 +53,33 @@ def create_lattice(a, nx_beg,nx_end,ny_beg,ny_end,nz_beg,nz_end, theta=0., phi=0
     print(NX.shape,NX.size)
     #print(NX)
     
-    # fcc lattice poits
-    
-    lattice_points = np.empty( [3*NX.size,3], order='C', dtype=np.float64 )
-    
-    for it,(nx,ny,nz) in enumerate(zip(NX.flatten(),NY.flatten(),NZ.flatten())):
-        print(nx,ny,nz)
-        lattice_points[it,0] = a*nx
-        lattice_points[it,1] = a*ny
-        lattice_points[it,2] = a*nz
-        lattice_points[it+NX.size,0] = a*(nx+0.5)
-        lattice_points[it+NX.size,1] = a*(ny+0.0)
-        lattice_points[it+NX.size,2] = a*(nz+0.5)
-        lattice_points[it+2*NX.size,0] = a*(nx+0.0)
-        lattice_points[it+2*NX.size,1] = a*(ny+0.5)
-        lattice_points[it+2*NX.size,2] = a*(nz+0.5)
+    # lattice poits
+    lattice_points = None
+    if   primitive_cell == 'bcc':
+        lattice_points = np.empty( [2*NX.size,3], order='C', dtype=np.float64 )
+        
+        for it,(nx,ny,nz) in enumerate(zip(NX.flatten(),NY.flatten(),NZ.flatten())):
+            print(nx,ny,nz)
+            lattice_points[it,0] = a*nx
+            lattice_points[it,1] = a*ny
+            lattice_points[it,2] = a*nz
+            lattice_points[it+NX.size,0] = a*(nx+0.5)
+            lattice_points[it+NX.size,1] = a*(ny+0.5)
+            lattice_points[it+NX.size,2] = a*(nz+0.5)
+    elif primitive_cell == 'fcc':
+        lattice_points = np.empty( [3*NX.size,3], order='C', dtype=np.float64 )
+        
+        for it,(nx,ny,nz) in enumerate(zip(NX.flatten(),NY.flatten(),NZ.flatten())):
+            print(nx,ny,nz)
+            lattice_points[it,0] = a*nx
+            lattice_points[it,1] = a*ny
+            lattice_points[it,2] = a*nz
+            lattice_points[it+NX.size,0] = a*(nx+0.5)
+            lattice_points[it+NX.size,1] = a*(ny+0.0)
+            lattice_points[it+NX.size,2] = a*(nz+0.5)
+            lattice_points[it+2*NX.size,0] = a*(nx+0.0)
+            lattice_points[it+2*NX.size,1] = a*(ny+0.5)
+            lattice_points[it+2*NX.size,2] = a*(nz+0.5)
     
     # apply rotation
     rot_theta = np.array( [[ math.cos(theta),              0., math.sin(theta)],
@@ -83,6 +94,9 @@ def create_lattice(a, nx_beg,nx_end,ny_beg,ny_end,nz_beg,nz_end, theta=0., phi=0
     
     
     return lattice_points
+
+
+
 
 
 
@@ -120,39 +134,19 @@ cpdef f1(double t,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dx,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dy,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz,
-         np.ndarray[np.complex128_t,ndim=1,negative_indices=False,mode='c'] fx,
-         np.ndarray[np.complex128_t,ndim=1,negative_indices=False,mode='c'] fy,
-         np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] fVN_params,
-         np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] rN,
-         double vext_x, double vext_y):
+         double vext_x, double vext_y, double eta, double Tv, double kappa, double rho):
+    """
+    Bennet Link model without external force.
+    """
     cdef int N = xk.size//2
-    #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz = 2*np.pi* scipy.fftpack.fftfreq(N, d=(z[1]-z[0]))
-    #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dxdt = np.empty(2*N)
     
-    # get positions of vortex filaments
-    x = np.ascontiguousarray( np.real( np.fft.ifft(xk[:N]) ) )
-    y = np.ascontiguousarray( np.real( np.fft.ifft(xk[N:]) ) )
+    for it in range(N):
+    #for it in prange(N, schedule='static', nogil=True): # TODO
+        dxdt[  it] = ( Tv*kappa*kz[it]*kz[it]/(4.0*np.pi) * ( -eta*xk[it] + 1.0*xk[N+it])  ) / (1.0 + eta*eta)  # - eta*fx + 1.0*fy
+        dxdt[N+it] = ( Tv*kappa*kz[it]*kz[it]/(4.0*np.pi) * ( -1.0*xk[it] - eta*xk[N+it])  ) / (1.0 + eta*eta)  # - 1.0*fy - eta*fy
     
-    
-    # get first derivatives of positions
-    dxdt[:N] = 1j*kz*xk[:N]
-    dxdt[N:] = 1j*kz*xk[N:]
-    dxdt[N//2] = 0
-    dx = np.ascontiguousarray( np.fft.ifft(dxdt[:N]).real )
-    dxdt[N+N//2] = 0
-    dy = np.ascontiguousarray( np.fft.ifft(dxdt[N:]).real )
-    
-    # evaluate forces acting on a nucleus
-    get_forces(&x[0], &y[0], &z[0], &dx[0], &dy[0], &rN[0], &fx[0], &fy[0], &fVN_params[0])
-    
-    # transform forces to Fourier space
-    fx = np.ascontiguousarray( np.fft.fft(fx) )
-    fy = np.ascontiguousarray( np.fft.fft(fy) )
-    
-    #print(fx)
-    
-    dxdt[:N] =  kz*kz * xk[N:] + fx
-    dxdt[N:] = -kz*kz * xk[:N] - fy
+    #dxdt[:N] = ( kz*kz * ( -eta*x[:N] + 1.0*x[N:]) ) / (1.0 + eta*eta) + fy  # - eta*fx + 1.0*fy
+    #dxdt[N:] = ( kz*kz * ( -1.0*x[:N] - eta*x[N:]) ) / (1.0 + eta*eta) - fx  # - 1.0*fy - eta*fy
     dxdt[0]  += vext_x*N
     dxdt[N]  += vext_y*N
     
@@ -169,52 +163,23 @@ cpdef f2(double t,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dx,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dy,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz,
-         np.ndarray[np.complex128_t,ndim=1,negative_indices=False,mode='c'] fx,
-         np.ndarray[np.complex128_t,ndim=1,negative_indices=False,mode='c'] fy,
-         np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] fVN_params,
-         np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] rN,
-         double vext_x, double vext_y, double eta):
+         double vext_x, double vext_y, double eta, double a, double kappa, double rho):
+    """
+    Kelvin dispersion model without external force. Tv changes to effective vortex core radius a, that corresponds to UV cutoff of theory.
+    """
     cdef int N = xk.size//2
-    #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz = 2*np.pi* scipy.fftpack.fftfreq(N, d=(z[1]-z[0]))
-    #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dxdt = np.empty(2*N)
-    
-    # get positions of vortex filaments
-    x = np.ascontiguousarray( np.real( np.fft.ifft(xk[:N]) ) )
-    y = np.ascontiguousarray( np.real( np.fft.ifft(xk[N:]) ) )
-    
-    
-    # get first derivatives of positions
-    dxdt[:N] = 1j*kz*xk[:N]
-    dxdt[N:] = 1j*kz*xk[N:]
-    dxdt[N//2] = 0
-    dx = np.ascontiguousarray( np.fft.ifft(dxdt[:N]).real )
-    dxdt[N+N//2] = 0
-    dy = np.ascontiguousarray( np.fft.ifft(dxdt[N:]).real )
-    
-    # evaluate forces acting on a nucleus
-    get_forces(&x[0], &y[0], &z[0], &dx[0], &dy[0], &rN[0], &fx[0], &fy[0], &fVN_params[0])
-    
-    # transform forces to Fourier space
-    fx = np.ascontiguousarray( np.fft.fft(fx) )
-    fy = np.ascontiguousarray( np.fft.fft(fy) )
-    
-    #print(fx)
-    #print(eta*x[0])
-    #print(eta*x)
-    #print(N)
     
     for it in range(N):
     #for it in prange(N, schedule='static', nogil=True): # TODO
-        dxdt[  it] = ( kz[it]*kz[it] * ( -eta*xk[it] + 1.0*xk[N+it]) ) / (1.0 + eta*eta) + fy[it]  # - eta*fx + 1.0*fy
-        dxdt[N+it] = ( kz[it]*kz[it] * ( -1.0*xk[it] - eta*xk[N+it]) ) / (1.0 + eta*eta) - fx[it]  # - 1.0*fy - eta*fy
+        dxdt[  it] = ( omega2(kz[it],a,kappa) * ( -eta*xk[it] + 1.0*xk[N+it])  ) / (1.0 + eta*eta)  # - eta*fx + 1.0*fy
+        dxdt[N+it] = ( omega2(kz[it],a,kappa) * ( -1.0*xk[it] - eta*xk[N+it])  ) / (1.0 + eta*eta)  # - 1.0*fy - eta*fy
     
-    #dxdt[:N] = ( kz*kz * ( -eta*x[:N] + 1.0*x[N:]) ) / (1.0 + eta*eta) + fy  # - eta*fx + 1.0*fy
-    #dxdt[N:] = ( kz*kz * ( -1.0*x[:N] - eta*x[N:]) ) / (1.0 + eta*eta) - fx  # - 1.0*fy - eta*fy
     dxdt[0]  += vext_x*N
     dxdt[N]  += vext_y*N
     
     
     return dxdt
+
 
 cpdef f3(double t,
          np.ndarray[np.complex128_t,ndim=1,negative_indices=False,mode='c'] xk,
@@ -230,6 +195,9 @@ cpdef f3(double t,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] fVN_params,
          np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] rN,
          double vext_x, double vext_y, double eta, double a, double kappa, double rho):
+    """
+    Kelvin dispersion model with presence of external force generated by single impurity.
+    """
     cdef int N = xk.size//2
     #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] kz = 2*np.pi* scipy.fftpack.fftfreq(N, d=(z[1]-z[0]))
     #cdef np.ndarray[np.float64_t,ndim=1,negative_indices=False,mode='c'] dxdt = np.empty(2*N)
