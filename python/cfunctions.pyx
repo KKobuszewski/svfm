@@ -67,19 +67,25 @@ def create_lattice(a, nx_beg,nx_end,ny_beg,ny_end,nz_beg,nz_end, theta=0., phi=0
             lattice_points[it+NX.size,1] = a*(ny+0.5)
             lattice_points[it+NX.size,2] = a*(nz+0.5)
     elif primitive_cell == 'fcc':
-        lattice_points = np.empty( [3*NX.size,3], order='C', dtype=np.float64 )
+        lattice_points = np.empty( [4*NX.size,3], order='C', dtype=np.float64 )
         
         for it,(nx,ny,nz) in enumerate(zip(NX.flatten(),NY.flatten(),NZ.flatten())):
             print(nx,ny,nz)
             lattice_points[it,0] = a*nx
             lattice_points[it,1] = a*ny
             lattice_points[it,2] = a*nz
-            lattice_points[it+NX.size,0] = a*(nx+0.5)
-            lattice_points[it+NX.size,1] = a*(ny+0.0)
-            lattice_points[it+NX.size,2] = a*(nz+0.5)
-            lattice_points[it+2*NX.size,0] = a*(nx+0.0)
-            lattice_points[it+2*NX.size,1] = a*(ny+0.5)
+            
+            lattice_points[it+  NX.size,0] = a*(nx+0.5)
+            lattice_points[it+  NX.size,1] = a*(ny+0.5)
+            lattice_points[it+  NX.size,2] = a*(nz+0.0)
+            
+            lattice_points[it+2*NX.size,0] = a*(nx+0.5)
+            lattice_points[it+2*NX.size,1] = a*(ny+0.0)
             lattice_points[it+2*NX.size,2] = a*(nz+0.5)
+            
+            lattice_points[it+3*NX.size,0] = a*(nx+0.0)
+            lattice_points[it+3*NX.size,1] = a*(ny+0.5)
+            lattice_points[it+3*NX.size,2] = a*(nz+0.5)
     
     # apply rotation
     rot_theta = np.array( [[ math.cos(theta),              0., math.sin(theta)],
