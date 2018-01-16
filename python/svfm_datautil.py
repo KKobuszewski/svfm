@@ -47,7 +47,7 @@ class XMLReader:
 
 class SVFMDataReader(XMLReader):
     
-    match_number = re.compile('-?\ *[0-9]+\.?[0-9]*(?:[Ee]\ *-?\ *[0-9]+)?')
+    match_number = re.compile('-?\ *[0-9]+\.?[0-9]*(?:[Ee]\+?-?\ *[0-9]+)?')
     
     prefix  = None
     eta     = None
@@ -65,15 +65,15 @@ class SVFMDataReader(XMLReader):
     t       = None
     dt      = None
     
-    def __init__(self,filename):
-        XMLReader.__init__(self,filename,verbose=False)
+    def __init__(self,filename,verbose=False):
+        XMLReader.__init__(self,filename,verbose=verbose)
         
         self.parameters = self.root[0]
         
-        
-        print(filename)
-        print(re.findall(self.match_number, filename))
-        print([float(x) for x in re.findall(self.match_number, filename)])
+        if verbose is True:
+            print(filename)
+            print(re.findall(self.match_number, filename))
+            print([float(x) for x in re.findall(self.match_number, filename)])
         
         self.prefix  =       self.parameters.findall('prefix')[0].text
         self.eta     = float(self.parameters.findall('eta')[0].text   )
@@ -96,7 +96,8 @@ class SVFMDataReader(XMLReader):
         
         self.dt = self.tmax / float(self.nom)
         
-        print(self.prefix)
+        if verbose is True:
+            print(self.prefix)
         
         
         
@@ -113,10 +114,11 @@ class SVFMDataReader(XMLReader):
         
         
         self.nucl = np.memmap(filename+'.nucl.bin',dtype=np.float64); nsize = self.nucl.size;
-        print(nsize,nsize//3,nsize//self.nom,nsize//self.nnucul)
         self.nucl = np.reshape(self.nucl,[nsize//(3*self.nnucul),self.nnucul,3])
         
-        print()
+        if verbose is True:
+            print(nsize,nsize//3,nsize//self.nom,nsize//self.nnucul)
+            print()
 
 
 
