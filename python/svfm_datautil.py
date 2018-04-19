@@ -64,6 +64,7 @@ class SVFMDataReader(XMLReader):
     nucl    = None
     t       = None
     dt      = None
+    alatt   = None
     
     def __init__(self,filename,verbose=False):
         XMLReader.__init__(self,filename,verbose=verbose)
@@ -93,6 +94,7 @@ class SVFMDataReader(XMLReader):
         self.N       =   int(self.parameters.findall('N')[0].text     )
         self.nom     =   int(self.parameters.findall('nom')[0].text   )
         self.tmax    = float(self.parameters.findall('tmax')[0].text  )
+        self.alatt   = float(self.parameters.findall('lattice_const')[0].text  )
         
         self.dt = self.tmax / float(self.nom)
         
