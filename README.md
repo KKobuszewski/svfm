@@ -28,4 +28,4 @@ A result of compilation is a module `cfunctions`, that is providing functions fo
 
 The compiled module `cfunctions` contains only functions needed to evaluate forces acting on a vortex line, and one have to provide the solver for dynamics of the vortex line.
 
-Examples of usage of the module `cfunctions` and simulation of motion of the vortex through the lattice of impurities are in the directory `simulations`.
+Examples of usage of the module `cfunctions` are given in the directory `simulations`.
