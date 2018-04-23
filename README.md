@@ -21,3 +21,11 @@ The code was written in CPython with C extensions.
 To compile the extensions go to `python` directory and type:
 
 `python setup.py build_ext`
+
+A result of compilation is a module `cfunctions`, that is providing functions for evaluation of forces acting on a vortex line. The compilation accelerates the bottelneck of the programs simulating dynamics of the vortex line.
+
+# Usage
+
+The compiled module `cfunctions` contains only functions needed to evaluate forces acting on a vortex line, and one have to provide the solver for dynamics of the vortex line.
+
+Examples of usage of the module `cfunctions` and simulation of motion of the vortex through the lattice of impurities are in the directory `simulations`.
